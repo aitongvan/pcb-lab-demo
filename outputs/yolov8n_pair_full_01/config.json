@@ -1,0 +1,13 @@
+{
+  "model": "yolov8n",
+  "mode": "pair",
+  "imgsz": 640,
+  "seed": 42,
+  "pretrained": true,
+  "smoke_test": false,
+  "training_loop": "project PyTorch loop; AdamW; synchronized flips; no stock Ultralytics trainer/EMA",
+  "learning_rate": 0.001,
+  "batch": 2,
+  "epochs": 100,
+  "confidence": 0.25
+}

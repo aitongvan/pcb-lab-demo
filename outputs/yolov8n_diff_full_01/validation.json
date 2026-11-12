@@ -1,0 +1,91 @@
+{
+  "images": 200,
+  "ground_truth": 1388,
+  "tp": 1027,
+  "fp": 607,
+  "fn": 361,
+  "precision": 0.6285189718482252,
+  "recall": 0.7399135446685879,
+  "f1": 0.6796823295830576,
+  "map50": 0.6308346223241157,
+  "map50_95": 0.48943368409606547,
+  "confidence": 0.25,
+  "match_iou": 0.5,
+  "evaluator": "score-sorted class-aware one-to-one; 101 recall samples; absent GT classes excluded from mAP",
+  "per_class": [
+    {
+      "name": "open",
+      "ground_truth": 253,
+      "tp": 208,
+      "fp": 99,
+      "fn": 45,
+      "precision": 0.6775244299674267,
+      "recall": 0.8221343873517787,
+      "f1": 0.7428571428571429,
+      "ap50": 0.7457564060132454,
+      "ap50_95": 0.51373831888165
+    },
+    {
+      "name": "short",
+      "ground_truth": 198,
+      "tp": 127,
+      "fp": 50,
+      "fn": 71,
+      "precision": 0.7175141242937854,
+      "recall": 0.6414141414141414,
+      "f1": 0.6773333333333332,
+      "ap50": 0.618897340940957,
+      "ap50_95": 0.43350323374384364
+    },
+    {
+      "name": "mousebite",
+      "ground_truth": 284,
+      "tp": 212,
+      "fp": 153,
+      "fn": 72,
+      "precision": 0.5808219178082191,
+      "recall": 0.7464788732394366,
+      "f1": 0.6533127889060092,
+      "ap50": 0.6091242720476657,
+      "ap50_95": 0.46353717010761164
+    },
+    {
+      "name": "spur",
+      "ground_truth": 231,
+      "tp": 161,
+      "fp": 100,
+      "fn": 70,
+      "precision": 0.6168582375478927,
+      "recall": 0.696969696969697,
+      "f1": 0.6544715447154471,
+      "ap50": 0.5652533821389111,
+      "ap50_95": 0.42380969914207495
+    },
+    {
+      "name": "copper",
+      "ground_truth": 211,
+      "tp": 144,
+      "fp": 61,
+      "fn": 67,
+      "precision": 0.7024390243902439,
+      "recall": 0.6824644549763034,
+      "f1": 0.6923076923076923,
+      "ap50": 0.5766618690593018,
+      "ap50_95": 0.527703969656759
+    },
+    {
+      "name": "pin-hole",
+      "ground_truth": 211,
+      "tp": 175,
+      "fp": 144,
+      "fn": 36,
+      "precision": 0.54858934169279,
+      "recall": 0.8293838862559242,
+      "f1": 0.6603773584905661,
+      "ap50": 0.6693144637446129,
+      "ap50_95": 0.5743097130444538
+    }
+  ],
+  "mean_preprocess_inference_postprocess_ms": 20.293036000002758,
+  "timing_scope": "arrays already loaded; resize + tensor conversion + network + postprocessing; warmup excluded; file IO excluded"
+}

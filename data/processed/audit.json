@@ -1,0 +1,45 @@
+{
+  "seed": 42,
+  "split_policy": "official test; random pair holdout within official trainval",
+  "board_independent": false,
+  "coordinate_policy": "source xyxy kept as continuous edges; no implicit +/-1",
+  "duplicate_test_images_across_splits": [],
+  "splits": {
+    "train": {
+      "pairs": 800,
+      "boxes": 5485,
+      "per_class": {
+        "open": 1030,
+        "short": 830,
+        "mousebite": 1095,
+        "spur": 911,
+        "copper": 799,
+        "pin-hole": 820
+      }
+    },
+    "val": {
+      "pairs": 200,
+      "boxes": 1388,
+      "per_class": {
+        "open": 253,
+        "short": 198,
+        "mousebite": 284,
+        "spur": 231,
+        "copper": 211,
+        "pin-hole": 211
+      }
+    },
+    "test": {
+      "pairs": 500,
+      "boxes": 3140,
+      "per_class": {
+        "open": 659,
+        "short": 478,
+        "mousebite": 586,
+        "spur": 483,
+        "copper": 464,
+        "pin-hole": 470
+      }
+    }
+  }
+}
