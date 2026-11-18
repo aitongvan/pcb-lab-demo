@@ -6,9 +6,9 @@ const vietnamese = ['Đứt mạch', 'Chập mạch', 'Khuyết cạnh', 'Gai th
 const colors = ['#f87171', '#fbbf24', '#60a5fa', '#a78bfa', '#34d399', '#fb923c'];
 const modes = { test: 'Ảnh kiểm tra', diff: 'Ảnh hiệu', pair: 'Hai kênh' };
 const splits = { train: 'Train', val: 'Validation', test: 'Test' };
+const DEFAULT_CONFIDENCE = 0.05;
 const state = { file: null, image: null, objectUrl: null, result: null, selected: -1,
   samples: [], experiments: [], controller: null, imageVersion: 0, requestVersion: 0 };
-let thresholdTimer;
 let animationTimer;
 let comparison = null;
 
@@ -99,7 +99,6 @@ async function responseJson(response) {
 function cancelPrediction() {
   state.controller?.abort();
   state.requestVersion += 1;
-  clearTimeout(thresholdTimer);
   clearTimeout(animationTimer);
   $('scanStage').classList.remove('scanning');
   $('processingOverlay').hidden = true;
@@ -167,7 +166,7 @@ async function analyze() {
   notice();
   const body = new FormData();
   body.append('file', state.file);
-  body.append('confidence', $('confidence').value);
+  body.append('confidence', String(DEFAULT_CONFIDENCE));
   body.append('enhance', String($('enhance').checked));
   try {
     const comparing = $('compareModels').checked;
@@ -437,13 +436,6 @@ $('imageFile').addEventListener('change', () => {
 });
 ['dragenter', 'dragover'].forEach((event) => $('uploadControls').addEventListener(event, () => $('uploadControls').classList.add('drag-over')));
 ['dragleave', 'drop'].forEach((event) => $('uploadControls').addEventListener(event, () => $('uploadControls').classList.remove('drag-over')));
-$('confidence').addEventListener('input', () => {
-  $('confidenceValue').value = Number($('confidence').value).toFixed(2);
-  cancelPrediction();
-  state.result = null;
-  $('review').hidden = true;
-  thresholdTimer = setTimeout(analyze, 250);
-});
 $('enhance').addEventListener('change', analyze);
 $('scanEffect').addEventListener('change', () => {
   $('downloadImage').textContent = $('scanEffect').checked ? 'Tải ảnh kết quả GIF' : 'Tải ảnh kết quả PNG';

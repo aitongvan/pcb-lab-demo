@@ -36,7 +36,7 @@ def models():
 
 
 @app.post('/api/compare')
-async def compare(file: UploadFile = File(...), confidence: float = Form(.25),
+async def compare(file: UploadFile = File(...), confidence: float = Form(.05),
                   enhance: bool = Form(False)):
     image = await uploaded_image(file)
     if not all(item['available'] for item in available_models()):
@@ -61,7 +61,7 @@ async def uploaded_image(file):
 
 
 @app.post('/api/predict')
-async def detect(file: UploadFile = File(...), confidence: float = Form(.25),
+async def detect(file: UploadFile = File(...), confidence: float = Form(.05),
                  enhance: bool = Form(False)):
     image = await uploaded_image(file)
     try:

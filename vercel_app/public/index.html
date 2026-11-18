@@ -18,9 +18,6 @@
       <p class="field-label">Mô hình</p>
       <div class="model-name"><span class="status-dot" aria-hidden="true"></span>YOLOv8n <small>Ảnh kiểm tra</small></div>
       <details class="model-details"><summary>Thông tin mô hình</summary><p>Đã huấn luyện 57 epoch. Checkpoint chọn tại epoch 37 bằng mAP@50–95 Validation.</p><p>Đầu vào 640 × 640 · 6 lớp lỗi.<br>Suy luận bằng ONNX Runtime trên CPU.</p></details>
-      <label for="confidence" class="field-label range-label">Ngưỡng tin cậy <output id="confidenceValue">0.25</output></label>
-      <input id="confidence" type="range" min="0.05" max="0.95" step="0.05" value="0.25">
-      <p class="muted">Giảm ngưỡng để giữ thêm dự đoán. Ngưỡng thấp có thể tạo thêm cảnh báo sai.</p>
       <label class="check"><input id="enhance" type="checkbox"> Tăng tương phản ảnh</label>
     </div>
     <div class="sidebar-section legend-section"><h3>Chú giải loại lỗi</h3><ul id="legend" class="legend"></ul></div>

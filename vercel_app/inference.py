@@ -98,7 +98,7 @@ def predict_tile(gray, confidence, model='yolov8n'):
     return detections
 
 
-def predict(image, confidence=.25, enhance=False, model='yolov8n'):
+def predict(image, confidence=.05, enhance=False, model='yolov8n'):
     if not .05 <= confidence <= .95:
         raise ValueError('Ngưỡng tin cậy phải từ 0,05 đến 0,95.')
     gray = image.convert('L')
