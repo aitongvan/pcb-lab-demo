@@ -12,7 +12,7 @@ let thresholdTimer;
 let animationTimer;
 let comparison = null;
 
-function replayHeroScan() {
+function startHeroScan() {
   const stage = $('heroScanStage');
   stage.classList.remove('hero-scanning');
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -20,12 +20,10 @@ function replayHeroScan() {
     return;
   }
   $('heroScanStatus').textContent = 'Quét liên tục · Minh họa';
-  // Restart the looping banner scan when replay is pressed.
   void stage.offsetWidth;
   stage.classList.add('hero-scanning');
 }
-$('replayHeroScan').addEventListener('click', replayHeroScan);
-$('heroPcbImage').decode().then(replayHeroScan).catch(() => {});
+$('heroPcbImage').decode().then(startHeroScan).catch(() => {});
 
 function element(tag, text, className) {
   const node = document.createElement(tag);
