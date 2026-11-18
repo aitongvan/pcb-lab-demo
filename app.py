@@ -8,92 +8,29 @@ import streamlit as st
 from PIL import Image, ImageDraw, ImageOps
 from pcb.common import ROOT, VI, NAMES, COLORS, read_json, project_path
 from pcb.data import manifest, annotate
+from pcb.visuals import scan_gif
 
 st.set_page_config(page_title='PCB Lab | Phát hiện lỗi mạch in',page_icon='🔬',layout='wide')
-st.markdown('''<style>
-:root {
-    --pcb-ink:#112b43;
-    --pcb-muted:#48647b;
-    --pcb-accent:#087d78;
-    --pcb-line:#d6e3ee;
-    --pcb-shadow:0 8px 26px rgba(24,65,97,.07);
-}
-.stApp {background:linear-gradient(160deg,#edf5fc 0%,#f7fafc 42%,#eff6f8 100%);color:var(--pcb-ink)}
-[data-testid="stHeader"] {background:rgba(247,250,252,.92)}
-.block-container {max-width:1440px;padding-top:3.25rem;padding-bottom:3.5rem}
-[data-testid="stSidebar"] {background:linear-gradient(165deg,#fff 0%,#f2f8fb 100%);border-right:1px solid var(--pcb-line)}
-[data-testid="stSidebar"] [data-testid="stSidebarContent"] {min-width:0}
-h1,h2,h3 {color:var(--pcb-ink);letter-spacing:-.032em}
-[data-testid="stCaptionContainer"] p {color:var(--pcb-muted)}
-.st-key-pcb_hero {
-    position:relative; overflow:hidden; border:1px solid #cbdfee; border-radius:26px;
-    background:radial-gradient(ellipse at 91% 4%,#c3edeb 0%,transparent 47%),
-      linear-gradient(120deg,#fff 0%,#eef7ff 54%,#dbeef8 100%);
-    box-shadow:0 14px 42px rgba(36,83,119,.11); padding:clamp(1.3rem,3vw,2.8rem);
-}
-.st-key-pcb_hero h1 {font-size:clamp(2.8rem,5vw,4.8rem);line-height:1;padding-top:.14em;padding-bottom:.14em}
-.pcb-eyebrow {font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;font-weight:750;color:#096767}
-.pcb-lead {color:#355873;font-size:clamp(.98rem,1.5vw,1.2rem);max-width:31rem;line-height:1.55;margin:0}
-.pcb-hero-figure {
-    margin:0; background:rgba(255,255,255,.8); padding:.6rem; border:1px solid #c4dbe8;
-    border-radius:18px; box-shadow:0 12px 24px rgba(30,77,105,.13);
-}
-.pcb-hero-figure img {display:block;width:100%;height:clamp(126px,15vw,196px);object-fit:cover;
-    object-position:50% 45%;border-radius:11px;background:#fff}
-.pcb-hero-figure figcaption {color:#33576f;padding:.5rem .4rem .1rem;font-size:.75rem;font-weight:650}
-[data-testid="stTabs"] [role="tablist"] {
-    gap:.35rem; margin:.35rem 0 .85rem; padding:.32rem; width:fit-content;max-width:100%;border-bottom:0;
-    border:1px solid var(--pcb-line);background:#fff;border-radius:14px;box-shadow:var(--pcb-shadow);
-}
-[data-testid="stTabs"] [role="tab"] {font-weight:650;padding:.55rem .9rem;border-radius:9px;color:#395b74}
-[data-testid="stTabs"] [role="tab"][aria-selected="true"] {background:#e0f4f3;color:#07615c}
-[data-testid="stTabs"] .react-aria-SelectionIndicator,[data-testid="stTabs"] [data-baseweb="tab-highlight"] {display:none}
-.st-key-pcb_source,.st-key-pcb_input,.st-key-pcb_result,.st-key-pcb_review,.st-key-pcb_compare {
-    background:#fff;border:1px solid var(--pcb-line);border-radius:18px;
-    box-shadow:var(--pcb-shadow);padding:1.05rem 1.25rem;min-width:0;
-}
-.st-key-pcb_input,.st-key-pcb_result {height:100%}
-.st-key-pcb_result {border-top:3px solid var(--pcb-accent)}
-.st-key-pcb_source [data-testid="stFileUploaderDropzone"] {
-    background:#f0f7fc;border:1px dashed #9dbcd2;border-radius:12px;
-}
-[data-testid="stImage"] img {border-radius:11px}
-.st-key-pcb_input [data-testid="stImage"] img,.st-key-pcb_result [data-testid="stImage"] img {
-    border:1px solid var(--pcb-line); display:block;
-}
-div[data-testid="stMetric"] {
-    background:linear-gradient(150deg,#fff,#f0f8fc);border:1px solid #dce8f0;border-radius:13px;
-    padding:.85rem .95rem;height:100%;
-}
-[data-testid="stMetricLabel"] p {color:#38566d;font-weight:630}
-[data-testid="stMetricValue"] {color:#076965;font-variant-numeric:tabular-nums}
-[data-testid="stDataFrame"],[data-testid="stExpander"] details {border-radius:12px}
-.pcb-legend {display:grid;gap:.4rem;margin:.35rem 0 0;padding:0;list-style:none}
-.pcb-legend li {display:grid;grid-template-columns:10px 1fr;gap:.5rem;align-items:baseline;
-    font-size:.84rem;padding:.36rem .5rem;background:#fff;border:1px solid #e0eaf2;border-radius:8px}
-.pcb-legend i {width:9px;height:9px;border-radius:50%;background:var(--defect-color);border:1px solid #53697f66}
-.pcb-legend small {color:#526b81;font-size:.72rem}
-@media(max-width:720px) {
-    .block-container {padding-top:3rem}
-    .st-key-pcb_hero {border-radius:18px}
-    .st-key-pcb_source,.st-key-pcb_input,.st-key-pcb_result,.st-key-pcb_review,.st-key-pcb_compare {padding:.8rem}
-    [data-testid="stTabs"] [role="tab"] {padding:.45rem .55rem}
-}
-</style>''',unsafe_allow_html=True)
+st.markdown(f"<style>{(ROOT / 'assets/interface.css').read_text(encoding='utf-8')}</style>",
+    unsafe_allow_html=True)
 
-hero_preview=ROOT/'outputs/yolov8n_gpu_full_01/evaluation_test/previews/20085291.png'
-with st.container(key='pcb_hero'):
-    introduction,illustration=st.columns([1.5,1],vertical_alignment='center')
-    with introduction:
-        st.markdown('<div class="pcb-eyebrow">Kiểm tra ngoại quan mạch in</div>',unsafe_allow_html=True)
-        st.title('PCB Lab')
-        st.markdown('<p class="pcb-lead">Tải một ảnh PCB để phát hiện lỗi và xem vị trí dự đoán trên bo mạch.</p>',
-            unsafe_allow_html=True)
-    if hero_preview.is_file():
-        encoded=base64.b64encode(hero_preview.read_bytes()).decode('ascii')
-        illustration.markdown(f'<figure class="pcb-hero-figure"><img src="data:image/png;base64,{encoded}" '
-            'alt="Ảnh mạch in DeepPCB có các khung lỗi dự đoán"><figcaption>Mẫu DeepPCB · Ảnh đã khoanh vùng lỗi</figcaption></figure>',
-            unsafe_allow_html=True)
+hero_preview = ROOT / 'outputs/yolov8n_gpu_full_01/evaluation_test/previews/20085291.png'
+hero_figure = ''
+if hero_preview.is_file():
+    encoded = base64.b64encode(hero_preview.read_bytes()).decode('ascii')
+    hero_figure = (
+        '<figure class="pcb-hero-figure"><div class="pcb-scan-frame">'
+        f'<img src="data:image/png;base64,{encoded}" '
+        'alt="Mẫu DeepPCB 20085291 với các vùng lỗi được mô hình dự đoán">'
+        '</div><figcaption>Mẫu DeepPCB 20085291 · Vị trí lỗi dự đoán</figcaption></figure>'
+    )
+st.markdown(
+    '<header class="pcb-hero"><div>'
+    '<div class="pcb-eyebrow">Phát hiện lỗi mạch in</div>'
+    '<h1>PCB <span class="pcb-lab-word">LAB</span></h1>'
+    '<p class="pcb-lead">Phát hiện, phân loại và định vị sáu loại lỗi trên ảnh PCB. '
+    'Chọn ảnh mẫu hoặc tải ảnh của bạn để bắt đầu.</p>'
+    f'</div>{hero_figure}</header>', unsafe_allow_html=True)
 
 MODES={'test':'Ảnh kiểm tra','diff':'Ảnh hiệu','pair':'Cặp ảnh hai kênh'}
 SPLITS={'val':'Validation','test':'Test','train':'Train'}
@@ -115,9 +52,12 @@ def highlight_detection(image, box):
     bounds = (center_x - radius, center_y - radius, center_x + radius, center_y + radius)
     highlighted = image.copy()
     draw = ImageDraw.Draw(highlighted)
-    draw.ellipse(bounds, outline='#172b43', width=round(7 * scale))
-    draw.ellipse(bounds, outline='#ffdf42', width=round(4 * scale))
+    draw.ellipse(bounds, outline='#080e18', width=round(7 * scale))
+    draw.ellipse(bounds, outline='#b8ff65', width=round(4 * scale))
     return highlighted
+
+
+render_scan = st.cache_data(max_entries=8,show_spinner=False)(scan_gif)
 
 
 @st.cache_resource(show_spinner='Đang nạp mô hình…')
@@ -136,6 +76,9 @@ single_checkpoints=[p for p in checkpoints if run_config(p.parents[1]).get('mode
 single_checkpoints.sort(key=lambda p:(p.parents[1].name!='yolov8n_gpu_full_01',
                                      bool(run_config(p.parents[1]).get('smoke_test')),str(p)))
 with st.sidebar:
+    st.markdown(
+        '<div class="pcb-sidebar-brand"><span class="pcb-brand-mark" aria-hidden="true"></span>'
+        '<div class="pcb-brand-name">PCB <span>LAB</span></div></div>', unsafe_allow_html=True)
     st.subheader('Thiết lập phát hiện')
     checkpoint=st.selectbox('Mô hình',single_checkpoints,
         format_func=lambda p:f'{run_label(p.parents[1])} · {p.parents[1].name}') if single_checkpoints else None
@@ -266,17 +209,35 @@ with detect_tab:
                             preview_caption=f'Lỗi {row + 1} · {selected["class_vi"]} · {selected["score"]:.1%}'
                 png=io.BytesIO()
                 preview_image.save(png,format='PNG')
+                show_scan=st.checkbox('Hiệu ứng quét trên ảnh kết quả',value=True)
+                animation=None
+                if show_scan:
+                    original_png=io.BytesIO()
+                    tested.save(original_png,format='PNG')
+                    with st.spinner('Đang tạo hiệu ứng quét…'):
+                        animation=render_scan(original_png.getvalue(),png.getvalue())
                 c1,c2=st.columns(2)
-                c1.download_button('Tải ảnh kết quả',png.getvalue(),file_name=f'{sample_id}_result.png',mime='image/png')
+                c1.download_button('Tải ảnh kết quả',animation if animation else png.getvalue(),
+                    file_name=f'{sample_id}_result.gif' if animation else f'{sample_id}_result.png',
+                    mime='image/gif' if animation else 'image/png',type='primary')
+                c1.caption('GIF · quét một lượt rồi dừng ở kết quả' if animation else 'PNG · ảnh kết quả')
                 payload={k:v for k,v in result.items() if k not in ['image','key']}
                 c2.download_button('Tải kết quả JSON',json.dumps(payload,ensure_ascii=False,indent=2),file_name=f'{sample_id}_prediction.json',mime='application/json')
                 if preds:
                     with st.expander('Phân bố lỗi và thời gian xử lý'):
                         if len(counts):
                             chart=counts.rename_axis('Loại lỗi').reset_index(name='Số lượng')
-                            st.bar_chart(chart,x='Loại lỗi',y='Số lượng',horizontal=True,color='#0f766e',height=280)
+                            st.bar_chart(chart,x='Loại lỗi',y='Số lượng',horizontal=True,color='#0284a8',height=280)
                         st.caption('Thời gian xử lý không tính nạp mô hình và đọc tệp.')
-            preview.image(preview_image,caption=preview_caption,width='stretch')
+            preview.image(animation if animation else preview_image,caption=preview_caption,width='stretch')
+
+    else:
+        st.markdown(
+            '<div class="pcb-empty"><div class="pcb-empty-target" aria-hidden="true"></div>'
+            '<strong>Sẵn sàng phân tích ảnh PCB</strong>'
+            '<p>Tải một ảnh ở phía trên hoặc chọn Mẫu DeepPCB để thử phát hiện. '
+            'Ảnh đầu vào và kết quả khoanh vùng lỗi sẽ xuất hiện tại đây.</p></div>',
+            unsafe_allow_html=True)
 
 with results_tab:
     with st.container(key='pcb_compare'):
@@ -303,7 +264,7 @@ with results_tab:
             st.dataframe(frame,hide_index=True,width='stretch',column_config=formats)
             chart=frame.rename(columns={'f1':'F1-score','map50_95':'mAP@50–95'})
             if chart['Mô hình'].duplicated().any():chart['Mô hình']=chart['Mô hình']+' · '+chart['Lượt chạy']
-            st.bar_chart(chart,x='Mô hình',y=['F1-score','mAP@50–95'],color=['#0f766e','#3b82f6'],stack=False,height=310,y_label='Điểm (%)')
+            st.bar_chart(chart,x='Mô hình',y=['F1-score','mAP@50–95'],color=['#0c9e85','#4f8df7'],stack=False,height=310,y_label='Điểm (%)')
         else: st.info('Chưa có báo cáo đầy đủ cho tập được chọn.')
     st.divider()
     st.subheader('Chi tiết một lượt đánh giá')
@@ -349,7 +310,7 @@ with data_tab:
         st.dataframe(pd.DataFrame([{'Tập':SPLITS[s],'Cặp ảnh':x['pairs'],'Số ảnh':x['pairs']*2,'Hộp lỗi':x['boxes']} for s,x in stats['splits'].items()]),hide_index=True,width='stretch')
         distribution=pd.DataFrame([{'Loại lỗi':vi,**{SPLITS[s]:x['per_class'][en] for s,x in stats['splits'].items()}} for en,vi in zip(NAMES,VI)])
         st.markdown('**Phân bố hộp nhãn theo loại lỗi**')
-        st.bar_chart(distribution,x='Loại lỗi',y=['Train','Validation','Test'],color=['#0f766e','#3b82f6','#f59e0b'],stack=False,height=300)
+        st.bar_chart(distribution,x='Loại lỗi',y=['Train','Validation','Test'],color=['#02a4be','#0c9e85','#8b5cf6'],stack=False,height=300)
         st.caption('Test giữ cách chia gốc. Validation tách theo cặp từ Train gốc; không phải kiểm thử độc lập theo thiết kế mạch.')
     with st.expander('Cách đọc kết quả'):
         st.markdown('''- **Precision:** tỷ lệ dự đoán ghép đúng trong các dự đoán được giữ lại.
