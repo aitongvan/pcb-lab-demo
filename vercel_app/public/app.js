@@ -16,10 +16,8 @@ function startHeroScan() {
   const stage = $('heroScanStage');
   stage.classList.remove('hero-scanning');
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    $('heroScanStatus').textContent = 'Minh họa quét PCB';
     return;
   }
-  $('heroScanStatus').textContent = 'Quét liên tục · Minh họa';
   void stage.offsetWidth;
   stage.classList.add('hero-scanning');
 }
