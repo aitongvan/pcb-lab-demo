@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field, ValidationError
@@ -15,12 +15,14 @@ from rendering import scan_gif
 
 ROOT = Path(__file__).resolve().parent
 app = FastAPI(title='PCB Lab', docs_url=None, redoc_url=None)
-app.mount('/static', StaticFiles(directory=ROOT / 'public'), name='static')
+# Vercel serves public assets from its CDN and omits them from the function.
+app.mount('/static', StaticFiles(directory=ROOT / 'public', check_dir=False), name='static')
 
 
 @app.get('/')
 def home():
-    return FileResponse(ROOT / 'public/index.html')
+    index = ROOT / 'public/index.html'
+    return FileResponse(index) if index.exists() else RedirectResponse('/index.html')
 
 
 @app.get('/api/health')
