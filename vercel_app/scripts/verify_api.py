@@ -30,4 +30,13 @@ assert client.post('/api/predict', files={'file': ('bad.jpg', b'invalid')}).stat
 assert client.post('/api/predict', files={'file': ('pcb.jpg', content)}, data={'confidence': 2}).status_code == 422
 assert client.get('/').status_code == 200
 assert client.get('/static/samples.json').status_code == 200
+models = client.get('/api/models').json()['models']
+assert next(model for model in models if model['id'] == 'yolov8n')['available']
+if not all(model['available'] for model in models):
+    unavailable = client.post('/api/compare', files={'file': ('pcb.jpg', content, 'image/jpeg')})
+    assert unavailable.status_code == 503, unavailable.text
+else:
+    compared = client.post('/api/compare', files={'file': ('pcb.jpg', content, 'image/jpeg')})
+    assert compared.status_code == 200, compared.text
+    assert [result['model'] for result in compared.json()['results']] == ['YOLOv8n', 'YOLO11n']
 print('All numerical comparisons, prediction API, exports and input validation passed.')

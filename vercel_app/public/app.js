@@ -10,6 +10,7 @@ const state = { file: null, image: null, objectUrl: null, result: null, selected
   samples: [], experiments: [], controller: null, imageVersion: 0, requestVersion: 0 };
 let thresholdTimer;
 let animationTimer;
+let comparison = null;
 
 function element(tag, text, className) {
   const node = document.createElement(tag);
@@ -91,6 +92,8 @@ function cancelPrediction() {
   clearTimeout(animationTimer);
   $('scanStage').classList.remove('scanning');
   $('processingOverlay').hidden = true;
+  comparison = null;
+  $('comparisonReview').hidden = true;
 }
 
 async function loadFile(file) {
@@ -156,18 +159,96 @@ async function analyze() {
   body.append('confidence', $('confidence').value);
   body.append('enhance', String($('enhance').checked));
   try {
-    const response = await fetch('/api/predict', { method: 'POST', body, signal: state.controller.signal });
-    const result = await responseJson(response);
+    const comparing = $('compareModels').checked;
+    const response = await fetch(comparing ? '/api/compare' : '/api/predict', { method: 'POST', body, signal: state.controller.signal });
+    const payload = await responseJson(response);
     if (version !== state.requestVersion) return;
+    const result = comparing ? payload.results[0] : payload;
+    comparison = comparing ? payload : null;
     state.result = result;
     state.selected = -1;
     $('processingOverlay').hidden = true;
     renderPredictions();
     drawResult(true);
+    if (comparison) renderComparison();
   } catch (error) {
     if (error.name === 'AbortError' || version !== state.requestVersion) return;
     $('processingOverlay').hidden = true;
     notice(error.message || 'Mất kết nối khi phân tích ảnh. Hãy thử lại.', true);
+  }
+}
+
+function renderComparison() {
+  const rows = $('comparisonRows');
+  rows.replaceChildren();
+  comparison.results.forEach((result) => {
+    const predictions = result.predictions;
+    const mean = predictions.length ? predictions.reduce((sum, p) => sum + p.score, 0) / predictions.length : null;
+    const row = element('tr');
+    addCells(row, [result.model, predictions.length, new Set(predictions.map((p) => p.class_id)).size,
+      formatPercent(mean), `${Math.round(result.processing_ms)} ms`]);
+    rows.append(row);
+  });
+  const predictions = comparison.results[1].predictions;
+  $('compareRegion').replaceChildren(new Option('Hiển thị tất cả vùng lỗi', '-1'),
+    ...predictions.map((p, index) => new Option(`Lỗi ${index + 1} · ${p.class_vi} · ${formatPercent(p.score)}`, String(index))));
+  $('compareFirstRegion').replaceChildren(new Option('Hiển thị tất cả vùng lỗi', '-1'),
+    ...comparison.results[0].predictions.map((p, index) => new Option(`Lỗi ${index + 1} · ${p.class_vi} · ${formatPercent(p.score)}`, String(index))));
+  $('comparisonReview').hidden = false;
+  drawComparison();
+}
+
+function drawComparison() {
+  if (!comparison) return;
+  for (const modelIndex of [0, 1]) {
+  const canvas = $(modelIndex === 0 ? 'compareFirstCanvas' : 'compareCanvas');
+  canvas.width = state.image.naturalWidth;
+  canvas.height = state.image.naturalHeight;
+  const context = canvas.getContext('2d');
+  context.drawImage(state.image, 0, 0);
+  const scale = Math.max(1, canvas.width / 900);
+  context.font = `${12 * scale}px sans-serif`;
+  const selected = Number($(modelIndex === 0 ? 'compareFirstRegion' : 'compareRegion').value);
+  comparison.results[modelIndex].predictions.forEach((prediction, index) => {
+    const [x1, y1, x2, y2] = prediction.bbox_xyxy;
+    context.strokeStyle = colors[prediction.class_id];
+    context.fillStyle = colors[prediction.class_id];
+    context.lineWidth = 2 * scale;
+    context.strokeRect(x1, y1, x2 - x1, y2 - y1);
+    context.fillText(`${prediction.class_name} ${prediction.score.toFixed(2)}`, x1, Math.max(14 * scale, y1 - 4));
+    if (index === selected) {
+      context.beginPath();
+      context.arc((x1 + x2) / 2, (y1 + y2) / 2, Math.max(15, Math.hypot(x2 - x1, y2 - y1) / 2 + 5), 0, Math.PI * 2);
+      context.strokeStyle = '#b8ff65';
+      context.lineWidth = 4 * scale;
+      context.stroke();
+    }
+  });
+  }
+  const selected = Number($('compareRegion').value);
+  const prediction = comparison.results[1].predictions[selected];
+  $('compareLabel').textContent = prediction ? `Lỗi ${selected + 1} · ${prediction.class_vi} · ${formatPercent(prediction.score)}` : '';
+}
+
+$('compareRegion').addEventListener('change', drawComparison);
+$('compareFirstRegion').addEventListener('change', drawComparison);
+$('compareModels').addEventListener('change', analyze);
+$('downloadCompareJson').addEventListener('click', () => {
+  if (comparison) download(new Blob([JSON.stringify(comparison, null, 2)], { type: 'application/json' }), 'pcb_comparison.json');
+});
+$('downloadCompareImage').addEventListener('click', () => {
+  if (comparison) $('compareCanvas').toBlob((blob) => { if (blob) download(blob, 'pcb_yolo11n_result.png'); }, 'image/png');
+});
+
+async function checkComparisonModels() {
+  try {
+    const data = await responseJson(await fetch('/api/models'));
+    const ready = ['yolov8n', 'yolo11n'].every((id) => data.models.some((model) => model.id === id && model.available));
+    $('compareModels').disabled = !ready;
+    $('compareStatus').textContent = ready ? 'Hai mô hình đã sẵn sàng. Bật tùy chọn để chạy cùng một ảnh.'
+      : 'Đang chuẩn bị YOLO11n một ảnh. So sánh sẽ được mở sau khi huấn luyện và bổ sung trọng số.';
+  } catch (error) {
+    $('compareStatus').textContent = 'Chưa kiểm tra được mô hình so sánh. Bạn vẫn có thể dùng YOLOv8n.';
   }
 }
 
@@ -483,3 +564,4 @@ async function initialize() {
 }
 
 initialize();
+checkComparisonModels();

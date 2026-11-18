@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field, ValidationError
 
-from inference import MAX_IMAGE_BYTES, NAMES, VI, annotate, predict, read_image
+from inference import MAX_IMAGE_BYTES, NAMES, VI, annotate, predict, read_image, available_models
 from rendering import scan_gif
 
 ROOT = Path(__file__).resolve().parent
@@ -28,6 +28,28 @@ def home():
 @app.get('/api/health')
 def health():
     return {'status': 'ok', 'model': 'YOLOv8n', 'runtime': 'ONNX Runtime CPU'}
+
+
+@app.get('/api/models')
+def models():
+    return {'models': available_models()}
+
+
+@app.post('/api/compare')
+async def compare(file: UploadFile = File(...), confidence: float = Form(.25),
+                  enhance: bool = Form(False)):
+    image = await uploaded_image(file)
+    if not all(item['available'] for item in available_models()):
+        raise HTTPException(503, 'Chưa có trọng số YOLO11n một ảnh. Chức năng so sánh sẽ mở khi mô hình được bổ sung.')
+    try:
+        first = await run_in_threadpool(predict, image, confidence, enhance, 'yolov8n')
+        second = await run_in_threadpool(predict, image, confidence, enhance, 'yolo11n')
+        return {'results': [first, second], 'timing_note': 'Hai mô hình chạy lần lượt trên CPU, không tính thời gian nạp mô hình. Số vùng và điểm tin cậy không xác định độ chính xác khi ảnh chưa có nhãn.'}
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
+    except Exception as error:
+        logging.exception('PCB comparison failed')
+        raise HTTPException(500, 'Chưa so sánh được mô hình. Hãy thử lại sau.') from error
 
 
 async def uploaded_image(file):

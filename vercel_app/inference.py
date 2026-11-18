@@ -16,6 +16,13 @@ COLORS = ['#f87171', '#fbbf24', '#60a5fa', '#a78bfa', '#34d399', '#fb923c']
 SIZE = 640
 MAX_IMAGE_BYTES = 4 * 1024 * 1024
 MAX_PIXELS = 24_000_000
+MODELS = {'yolov8n': ('YOLOv8n', 'pcb.onnx'),
+          'yolo11n': ('YOLO11n', 'pcb_yolo11n.onnx')}
+
+
+def available_models():
+    return [dict(id=key, name=name, available=(ROOT / 'model' / filename).is_file())
+            for key, (name, filename) in MODELS.items()]
 
 
 def read_image(content):
@@ -33,12 +40,17 @@ def read_image(content):
         raise ValueError('Không đọc được ảnh. Hãy dùng PNG, JPEG, BMP hoặc TIFF hợp lệ.') from error
 
 
-@lru_cache(maxsize=1)
-def session():
+@lru_cache(maxsize=2)
+def session(model='yolov8n'):
+    if model not in MODELS:
+        raise ValueError('Mô hình không hợp lệ.')
+    path = ROOT / 'model' / MODELS[model][1]
+    if not path.is_file():
+        raise ValueError('YOLO11n một ảnh chưa được triển khai. Cần huấn luyện và bổ sung trọng số.')
     options = ort.SessionOptions()
     options.intra_op_num_threads = 2
     options.inter_op_num_threads = 1
-    return ort.InferenceSession(str(ROOT / 'model/pcb.onnx'), sess_options=options,
+    return ort.InferenceSession(str(path), sess_options=options,
                                providers=['CPUExecutionProvider'])
 
 
@@ -59,11 +71,11 @@ def nms(boxes, scores, classes, limit=300):
     return kept
 
 
-def predict_tile(gray, confidence):
+def predict_tile(gray, confidence, model='yolov8n'):
     height, width = gray.shape
     resized = np.array(Image.fromarray(gray).resize((SIZE, SIZE), Image.Resampling.BILINEAR))
     tensor = np.repeat(resized[None, None], 3, axis=1).astype(np.float32) / 255.
-    network = session()
+    network = session(model)
     raw = network.run(None, {network.get_inputs()[0].name: tensor})[0][0].T
     classes = raw[:, 4:].argmax(axis=1)
     scores = raw[:, 4:].max(axis=1)
@@ -86,7 +98,7 @@ def predict_tile(gray, confidence):
     return detections
 
 
-def predict(image, confidence=.25, enhance=False):
+def predict(image, confidence=.25, enhance=False, model='yolov8n'):
     if not .05 <= confidence <= .95:
         raise ValueError('Ngưỡng tin cậy phải từ 0,05 đến 0,95.')
     gray = image.convert('L')
@@ -94,10 +106,10 @@ def predict(image, confidence=.25, enhance=False):
         gray = ImageOps.autocontrast(gray, cutoff=1)
     pixels = np.asarray(gray)
     height, width = pixels.shape
-    session()  # Model initialization is excluded from the processing measurement.
+    session(model)  # Model initialization is excluded from the processing measurement.
     start = time.perf_counter()
     if max(width, height) <= 2 * SIZE:
-        detections = predict_tile(pixels, confidence)
+        detections = predict_tile(pixels, confidence, model)
         count = 1
     else:
         def starts(length):
@@ -109,7 +121,7 @@ def predict(image, confidence=.25, enhance=False):
         detections = []
         for y in ys:
             for x in xs:
-                local = predict_tile(pixels[y:y + SIZE, x:x + SIZE], confidence)
+                local = predict_tile(pixels[y:y + SIZE, x:x + SIZE], confidence, model)
                 for detection in local:
                     box = detection['bbox_xyxy']
                     detection['bbox_xyxy'] = [box[0] + x, box[1] + y, box[2] + x, box[3] + y]
@@ -121,7 +133,7 @@ def predict(image, confidence=.25, enhance=False):
             detections = [detections[index] for index in kept]
     return dict(predictions=detections, processing_ms=(time.perf_counter() - start) * 1000,
                 tiles_scanned=count, width=width, height=height, confidence=confidence,
-                contrast_enhanced=enhance, model='YOLOv8n', runtime='ONNX Runtime CPU')
+                contrast_enhanced=enhance, model=MODELS[model][0], runtime='ONNX Runtime CPU')
 
 
 def annotate(image, predictions, selected=-1):

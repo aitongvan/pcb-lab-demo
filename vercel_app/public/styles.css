@@ -489,6 +489,14 @@ select:focus {
 .region-controls label { flex:1; min-width:160px }
 .region-controls select { width:100%; margin-top:6px }
 .region-controls p { flex-basis:100%; margin:0 }
+.comparison-options { margin-top:18px }
+#compareCanvas { display:block; width:100%; height:auto }
+#comparisonReview { margin-top:20px }
+#compareRegion { width:100%; margin:8px 0 16px }
+.comparison-images { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px }
+#compareFirstCanvas { display:block; width:100%; height:auto }
+#compareFirstRegion { width:100%; margin:8px 0 16px }
+@media(max-width:760px) { .comparison-images { grid-template-columns:1fr } }
 .scan-stage.scanning canvas {
     animation:reveal 1.5s linear
 }
