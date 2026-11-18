@@ -98,6 +98,7 @@ async function loadFile(file) {
   cancelPrediction();
   state.file = null;
   state.result = null;
+  $('regionControls').hidden = true;
   $('review').hidden = true;
   $('imageGrid').hidden = true;
   $('imageDimensions').textContent = '';
@@ -143,6 +144,7 @@ async function analyze() {
   const version = state.requestVersion;
   state.controller = new AbortController();
   state.result = null;
+  $('regionControls').hidden = true;
   $('review').hidden = true;
   $('predictionCount').textContent = '';
   $('selectedLabel').textContent = '';
@@ -209,8 +211,11 @@ function drawResult(animate = false) {
   }
 }
 
-function selectPrediction(index) {
-  state.selected = state.selected === index ? -1 : index;
+function selectPrediction(index, toggle = true) {
+  if (!state.result) return;
+  state.selected = toggle && state.selected === index ? -1 : index;
+  $('regionSelect').value = String(state.selected);
+  $('clearRegion').disabled = state.selected < 0;
   const prediction = state.result.predictions[state.selected];
   $('selectedLabel').textContent = prediction ? `Lỗi ${state.selected + 1} · ${prediction.class_vi} · ${formatPercent(prediction.score)}` : '';
   [...$('predictionTable').tBodies[0].rows].forEach((row, rowIndex) => {
@@ -221,9 +226,32 @@ function selectPrediction(index) {
   drawResult();
 }
 
+$('regionSelect').addEventListener('change', () => selectPrediction(Number($('regionSelect').value), false));
+$('clearRegion').addEventListener('click', () => selectPrediction(-1, false));
+$('resultCanvas').addEventListener('click', (event) => {
+  if (!state.result) return;
+  const canvas = $('resultCanvas');
+  const bounds = canvas.getBoundingClientRect();
+  const x = (event.clientX - bounds.left) * canvas.width / bounds.width;
+  const y = (event.clientY - bounds.top) * canvas.height / bounds.height;
+  const padding = 5 * canvas.width / bounds.width;
+  // Prefer the smallest matching box when predicted regions overlap.
+  const hits = state.result.predictions.map((prediction, index) => ({ ...prediction, index }))
+    .filter(({ bbox_xyxy: [x1, y1, x2, y2] }) =>
+      x >= x1 - padding && x <= x2 + padding && y >= y1 - padding && y <= y2 + padding)
+    .sort((a, b) => (a.bbox_xyxy[2] - a.bbox_xyxy[0]) * (a.bbox_xyxy[3] - a.bbox_xyxy[1])
+      - (b.bbox_xyxy[2] - b.bbox_xyxy[0]) * (b.bbox_xyxy[3] - b.bbox_xyxy[1]));
+  selectPrediction(hits[0]?.index ?? -1);
+});
+
 function renderPredictions() {
   const result = state.result;
   const predictions = result.predictions;
+  $('regionSelect').replaceChildren(new Option('Hiển thị tất cả vùng lỗi', '-1'),
+    ...predictions.map((prediction, index) => new Option(
+      `Lỗi ${index + 1} · ${prediction.class_vi} · ${formatPercent(prediction.score)}`, String(index))));
+  $('regionControls').hidden = predictions.length === 0;
+  $('clearRegion').disabled = true;
   const mean = predictions.length ? predictions.reduce((sum, p) => sum + p.score, 0) / predictions.length : null;
   $('predictionMetrics').replaceChildren(
     metric('Vùng lỗi được dự đoán', predictions.length),
