@@ -11,24 +11,18 @@ const state = { file: null, image: null, objectUrl: null, result: null, selected
 let thresholdTimer;
 let animationTimer;
 let comparison = null;
-let heroScanTimer;
 
 function replayHeroScan() {
   const stage = $('heroScanStage');
-  clearTimeout(heroScanTimer);
   stage.classList.remove('hero-scanning');
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
     $('heroScanStatus').textContent = 'Minh họa quét PCB';
     return;
   }
-  $('heroScanStatus').textContent = 'Đang quét · Minh họa';
-  // Restart a single pass, including when replay is pressed during a scan.
+  $('heroScanStatus').textContent = 'Quét liên tục · Minh họa';
+  // Restart the looping banner scan when replay is pressed.
   void stage.offsetWidth;
   stage.classList.add('hero-scanning');
-  heroScanTimer = setTimeout(() => {
-    stage.classList.remove('hero-scanning');
-    $('heroScanStatus').textContent = 'Quét minh họa hoàn tất';
-  }, 2650);
 }
 $('replayHeroScan').addEventListener('click', replayHeroScan);
 $('heroPcbImage').decode().then(replayHeroScan).catch(() => {});

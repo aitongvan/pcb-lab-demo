@@ -293,7 +293,7 @@ main {
     background:#7cffe8; box-shadow:0 0 12px 3px #00ffc8,0 -24px 30px 12px #00f5d866;
     pointer-events:none
 }
-.hero-scan-stage.hero-scanning .hero-scan-beam { animation:heroSweep 2.6s linear 1 both }
+.hero-scan-stage.hero-scanning .hero-scan-beam { animation:heroSweep 2.6s ease-in-out infinite alternate both }
 .hero-scan-badge {
     position:absolute; bottom:8px; left:8px; padding:5px 9px; border-radius:5px;
     color:#a6fff1; background:#0b2031e8; font-size:.65rem; letter-spacing:.03em
