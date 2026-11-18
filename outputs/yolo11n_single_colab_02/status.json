@@ -1,0 +1,6 @@
+{
+  "status": "completed",
+  "epochs": 55,
+  "best_map50_95": 0.7523580059211304,
+  "smoke_test": false
+}

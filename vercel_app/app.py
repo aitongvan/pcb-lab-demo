@@ -44,7 +44,7 @@ async def compare(file: UploadFile = File(...), confidence: float = Form(.05),
     try:
         first = await run_in_threadpool(predict, image, confidence, enhance, 'yolov8n')
         second = await run_in_threadpool(predict, image, confidence, enhance, 'yolo11n')
-        return {'results': [first, second], 'timing_note': 'Hai mô hình chạy lần lượt trên CPU, không tính thời gian nạp mô hình. Số vùng và điểm tin cậy không xác định độ chính xác khi ảnh chưa có nhãn.'}
+        return {'results': [first, second], 'timing_note': 'Hai mô hình chạy lần lượt trên CPU, không tính thời gian nạp và làm nóng mô hình. Số vùng và điểm tin cậy không xác định độ chính xác khi ảnh chưa có nhãn.'}
     except ValueError as error:
         raise HTTPException(422, str(error)) from error
     except Exception as error:

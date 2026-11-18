@@ -1,0 +1,46 @@
+{
+  "model": "yolo11n",
+  "mode": "test",
+  "imgsz": 640,
+  "run": "yolo11n_single_colab_02",
+  "status": {
+    "status": "completed",
+    "epochs": 55,
+    "best_map50_95": 0.7523580059211304,
+    "smoke_test": false
+  },
+  "config": {
+    "model": "yolo11n",
+    "mode": "test",
+    "imgsz": 640,
+    "seed": 42,
+    "pretrained": true,
+    "smoke_test": false,
+    "training_loop": "project PyTorch loop; AdamW; synchronized flips; no stock Ultralytics trainer/EMA",
+    "learning_rate": 0.001,
+    "batch": 2,
+    "epochs": 100,
+    "confidence": 0.25,
+    "pretrained_tensors_loaded": 448
+  },
+  "verified_validation_ids": [
+    "77000087",
+    "00041018",
+    "92000106",
+    "50600022",
+    "20085033"
+  ],
+  "sha256": "371dc76b6e5d65f45ce7db00ea26b0a13fa60da1988399dcd0a215a75a112bae",
+  "training_environment": {
+    "python": "3.13.16",
+    "platform": "Linux-6.6.159+-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.1+cu130",
+      "torchvision": "0.29.1+cu130",
+      "ultralytics": "8.4.194",
+      "numpy": "2.4.6"
+    },
+    "device": "cuda:0",
+    "gpu_name": "Tesla T4"
+  }
+}

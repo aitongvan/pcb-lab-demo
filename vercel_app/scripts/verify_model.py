@@ -1,5 +1,6 @@
 """Check that ONNX deployment preserves the original detector's predictions."""
 from pathlib import Path
+import argparse
 import io
 import json
 import sys
@@ -14,7 +15,15 @@ from inference import predict
 from pcb.engine import Detector
 
 torch.set_num_threads(2)
-detector = Detector.load(ROOT.parent / 'outputs/yolov8n_gpu_full_01/weights/best.pt', 'cpu')
+parser = argparse.ArgumentParser()
+parser.add_argument('--model', choices=['yolov8n', 'yolo11n'], default='yolov8n')
+parser.add_argument('--checkpoint', type=Path)
+args = parser.parse_args()
+if args.model == 'yolo11n' and not args.checkpoint:
+    parser.error('--checkpoint is required for YOLO11n verification')
+checkpoint = args.checkpoint or ROOT.parent / 'outputs/yolov8n_gpu_full_01/weights/best.pt'
+detector = Detector.load(checkpoint, 'cpu')
+assert detector.arch == args.model and detector.mode == 'test', 'Wrong architecture or input mode'
 rows = json.loads((ROOT.parent / 'data/processed/manifest.json').read_text(encoding='utf-8'))
 scenarios = []
 for row in rows:
@@ -31,7 +40,7 @@ for name, image, confidence, enhance in scenarios:
         from PIL import ImageOps
         gray = ImageOps.autocontrast(gray, cutoff=1)
     expected, _, tiles = detector.predict_image(np.asarray(gray), confidence)
-    actual = predict(image, confidence, enhance)
+    actual = predict(image, confidence, enhance, args.model)
     assert len(expected) == len(actual['predictions']), (name, len(expected), len(actual['predictions']))
     assert tiles == actual['tiles_scanned']
     unmatched = list(actual['predictions'])
@@ -44,4 +53,4 @@ for name, image, confidence, enhance in scenarios:
         unmatched.remove(found)
     print(name, confidence, len(expected), 'detections matched')
 
-print('All 13 ONNX and PyTorch prediction comparisons passed.')
+print(f'All {len(scenarios)} ONNX and PyTorch prediction comparisons passed for {args.model}.')

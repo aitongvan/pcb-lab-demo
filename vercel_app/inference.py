@@ -50,8 +50,11 @@ def session(model='yolov8n'):
     options = ort.SessionOptions()
     options.intra_op_num_threads = 2
     options.inter_op_num_threads = 1
-    return ort.InferenceSession(str(path), sess_options=options,
-                               providers=['CPUExecutionProvider'])
+    network = ort.InferenceSession(str(path), sess_options=options,
+                                   providers=['CPUExecutionProvider'])
+    # Exclude the first kernel/allocator warm-up from both models' timings.
+    network.run(None, {network.get_inputs()[0].name: np.zeros((1, 3, SIZE, SIZE), dtype=np.float32)})
+    return network
 
 
 def nms(boxes, scores, classes, limit=300):

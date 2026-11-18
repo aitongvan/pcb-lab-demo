@@ -104,6 +104,7 @@ function cancelPrediction() {
   $('processingOverlay').hidden = true;
   comparison = null;
   $('comparisonReview').hidden = true;
+  $('imageGrid').classList.remove('comparison-active');
 }
 
 async function loadFile(file) {
@@ -189,6 +190,7 @@ async function analyze() {
 }
 
 function renderComparison() {
+  $('imageGrid').classList.add('comparison-active');
   const rows = $('comparisonRows');
   rows.replaceChildren();
   comparison.results.forEach((result) => {
@@ -241,7 +243,7 @@ function drawComparison() {
 }
 
 $('compareRegion').addEventListener('change', drawComparison);
-$('compareFirstRegion').addEventListener('change', drawComparison);
+$('compareFirstRegion').addEventListener('change', () => selectPrediction(Number($('compareFirstRegion').value), false));
 $('compareModels').addEventListener('change', analyze);
 $('downloadCompareJson').addEventListener('click', () => {
   if (comparison) download(new Blob([JSON.stringify(comparison, null, 2)], { type: 'application/json' }), 'pcb_comparison.json');
@@ -315,6 +317,10 @@ function selectPrediction(index, toggle = true) {
     else row.removeAttribute('aria-current');
   });
   drawResult();
+  if (comparison) {
+    $('compareFirstRegion').value = String(state.selected);
+    drawComparison();
+  }
 }
 
 $('regionSelect').addEventListener('change', () => selectPrediction(Number($('regionSelect').value), false));
@@ -338,6 +344,7 @@ $('resultCanvas').addEventListener('click', (event) => {
 function renderPredictions() {
   const result = state.result;
   const predictions = result.predictions;
+  $('reviewTitle').textContent = comparison ? 'Chi tiết dự đoán · YOLOv8n' : 'Chi tiết dự đoán';
   $('regionSelect').replaceChildren(new Option('Hiển thị tất cả vùng lỗi', '-1'),
     ...predictions.map((prediction, index) => new Option(
       `Lỗi ${index + 1} · ${prediction.class_vi} · ${formatPercent(prediction.score)}`, String(index))));

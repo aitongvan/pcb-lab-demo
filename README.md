@@ -6,10 +6,12 @@
 
 ## Demo trực tuyến
 
+Bản Vercel tại https://pcbnhom4.vercel.app/ hỗ trợ tải **một ảnh để so sánh YOLOv8n và YOLO11n**. Có thể chọn từng vùng lỗi và xuất kết quả. Xem `vercel_app/README.md` để biết cấu hình, kiểm tra ONNX và kết quả YOLO11n mới.
+
 Triển khai trên Streamlit Community Cloud với tệp `app.py` và Python 3.11.
 Bản demo chạy mô hình YOLOv8n trên CPU. Chọn ảnh mẫu DeepPCB để xem dự đoán
 ngay hoặc chuyển sang **Tải ảnh của bạn**. Bản demo có năm ảnh mẫu và kết quả
-đánh giá đã lưu của bốn lượt thực nghiệm. Để chuẩn bị dữ liệu và huấn luyện lại,
+đánh giá đã lưu của năm lượt thực nghiệm. Để chuẩn bị dữ liệu và huấn luyện lại,
 cần tải bộ DeepPCB đầy đủ theo hướng dẫn bên dưới.
 
 Ảnh mẫu lấy từ [DeepPCB](https://github.com/tangsanli5201/DeepPCB).
