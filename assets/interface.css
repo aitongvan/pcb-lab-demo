@@ -320,3 +320,13 @@ div[data-testid="stMetric"] {
     .pcb-scan-frame::after { animation: none; }
     *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
 }
+
+/* Shared visual language with the public inspection workspace. */
+.pcb-hero { border-radius:16px; background:linear-gradient(115deg,#edfbf9,#edf6fd 65%,#f4f1ff); box-shadow:0 4px 20px #18334c05; }
+.pcb-hero h1 { font-family:Arial,sans-serif; font-size:3.8rem; letter-spacing:-.05em; }
+.pcb-hero .pcb-lab-word { color:#087f8c; }
+.st-key-pcb_source,.st-key-pcb_input,.st-key-pcb_result,.st-key-pcb_review,.st-key-pcb_compare,.st-key-pcb_reference { border-radius:12px; border:1px solid #dfe7ee; background:#fff; padding:1.25rem; box-shadow:0 4px 20px #18334c05; }
+.st-key-pcb_reference { border-top:3px solid #94a3b8; }
+.st-key-pcb_input { border-top:3px solid #1686a8; }
+.st-key-pcb_result { border-top:3px solid #0a9d85; }
+@media(max-width:640px) { .pcb-hero h1 { font-size:3rem; } .st-key-pcb_reference { padding:1rem; } }

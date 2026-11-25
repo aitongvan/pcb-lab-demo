@@ -110,6 +110,7 @@ with detect_tab:
         st.subheader('Chọn ảnh PCB')
         source=st.radio('Nguồn ảnh',['Tải ảnh của bạn','Mẫu DeepPCB'],index=1,horizontal=True)
         tested=None
+        reference=None
         enhance_contrast=False
         sample_id='uploaded'
         if source=='Mẫu DeepPCB':
@@ -122,6 +123,8 @@ with detect_tab:
                     format_func=lambda r:f'{r["id"]} · {len(r["boxes"])} lỗi trong nhãn gốc')
                 if sample is not None:
                     sample_id=sample['id']
+                    with Image.open(project_path(sample['template'])) as im:
+                        reference=im.convert('RGB')
                     with Image.open(project_path(sample['tested'])) as im:
                         tested=im.convert('RGB')
             else:
@@ -138,9 +141,16 @@ with detect_tab:
                     st.error('Không đọc được ảnh. Hãy chọn một tệp ảnh hợp lệ.')
 
     if tested is not None:
-        left,right=st.columns(2,gap='medium')
+        if reference is not None:
+            reference_column,left,right=st.columns(3,gap='medium')
+            reference_panel=reference_column.container(key='pcb_reference')
+            reference_panel.markdown('**Ảnh mẫu chuẩn**')
+            reference_panel.image(reference,caption=f'Cặp {sample_id} · Ảnh tham chiếu',width='stretch')
+            st.caption('Ảnh mẫu chuẩn dùng để đối chiếu; mô hình vẫn dự đoán từ ảnh kiểm tra.')
+        else:
+            left,right=st.columns(2,gap='medium')
         input_panel=left.container(key='pcb_input')
-        input_panel.markdown('**Ảnh đầu vào**')
+        input_panel.markdown('**Ảnh kiểm tra**' if reference is not None else '**Ảnh tải lên**')
         input_panel.image(tested,caption=f'{tested.width:,} × {tested.height:,} px',width='stretch')
         result_panel=right.container(key='pcb_result')
         result_panel.markdown('**Kết quả phát hiện**')

@@ -21,6 +21,9 @@ xuất PNG và báo lỗi đầu vào. Các công cụ xuất và đối chiếu
 ở môi trường phát triển, ngoài các thư viện chạy web trong `requirements.txt`.
 
 Ảnh mẫu lấy từ [DeepPCB](https://github.com/tangsanli5201/DeepPCB).
+Mỗi mẫu có `url` (ảnh kiểm tra) và `template_url` (ảnh mẫu chuẩn cùng mã cặp).
+Chế độ mẫu hiển thị ảnh chuẩn để đối chiếu; chế độ tải ảnh lên ẩn ảnh chuẩn.
+Ảnh chuẩn chỉ phục vụ quan sát, không được gửi vào API suy luận một ảnh.
 Giấy phép nguồn nằm ở thư mục `data/raw/DeepPCB/LICENSE` của kho chính.
 
 ## YOLO11n một ảnh đã hoàn tất

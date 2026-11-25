@@ -11,6 +11,7 @@ const state = { file: null, image: null, objectUrl: null, result: null, selected
   samples: [], experiments: [], controller: null, imageVersion: 0, requestVersion: 0 };
 let animationTimer;
 let comparison = null;
+$('scanStage').after($('regionControls'));
 
 function startHeroScan() {
   const stage = $('heroScanStage');
@@ -107,9 +108,39 @@ function cancelPrediction() {
   $('imageGrid').classList.remove('comparison-active');
 }
 
-async function loadFile(file) {
+function resetReference() {
+  $('referenceCard').hidden = true;
+  $('referenceImage').removeAttribute('src');
+  $('referenceCaption').textContent = '';
+  $('imageGrid').classList.remove('has-reference');
+}
+
+async function showReference(sample, version) {
+  if (!sample?.template_url) return;
+  const reference = new Image();
+  reference.src = sample.template_url;
+  try {
+    await reference.decode();
+    if (version !== state.imageVersion) return;
+    $('referenceImage').src = reference.src;
+    $('referenceCaption').textContent = `Cặp ${sample.id} · ${splits[sample.split]} · Ảnh tham chiếu`;
+    $('referenceCard').hidden = false;
+    $('imageGrid').classList.add('has-reference');
+  } catch {
+    if (version === state.imageVersion) {
+      $('sourceContext').textContent = 'Chưa tải được ảnh mẫu chuẩn. Kết quả dự đoán vẫn sử dụng ảnh kiểm tra.';
+    }
+  }
+}
+
+async function loadFile(file, sample = null) {
   const version = ++state.imageVersion;
   cancelPrediction();
+  resetReference();
+  $('inputTitle').textContent = sample ? 'Ảnh kiểm tra' : 'Ảnh tải lên';
+  $('sourceContext').textContent = sample
+    ? `Cặp ${sample.id} · ${splits[sample.split]}. Ảnh mẫu chuẩn chỉ để đối chiếu; mô hình dự đoán từ ảnh kiểm tra.`
+    : 'Chỉ cần một ảnh PCB. Mô hình phân tích trực tiếp ảnh tải lên, không yêu cầu ảnh mẫu chuẩn.';
   state.file = null;
   state.result = null;
   $('regionControls').hidden = true;
@@ -145,6 +176,7 @@ async function loadFile(file) {
     canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
     $('imageDimensions').textContent = `${image.naturalWidth.toLocaleString()} × ${image.naturalHeight.toLocaleString()} px`;
     $('imageGrid').hidden = false;
+    showReference(sample, version);
     await analyze();
   } catch (error) {
     URL.revokeObjectURL(url);
@@ -392,6 +424,7 @@ async function loadSample() {
   const sample = state.samples.find((value) => value.id === $('sampleSelect').value);
   if (!sample) return;
   cancelPrediction();
+  resetReference();
   state.file = null;
   state.result = null;
   $('review').hidden = true;
@@ -402,7 +435,7 @@ async function loadSample() {
     if (!response.ok) throw new Error('Không tải được ảnh mẫu. Hãy thử lại.');
     const blob = await response.blob();
     if (version !== state.imageVersion) return;
-    await loadFile(new File([blob], `${sample.id}.jpg`, { type: 'image/jpeg' }));
+    await loadFile(new File([blob], `${sample.id}.jpg`, { type: 'image/jpeg' }), sample);
   } catch (error) {
     if (version === state.imageVersion) notice(error.message, true);
   }
@@ -422,6 +455,10 @@ document.querySelectorAll('input[name=source]').forEach((radio) => {
     $('uploadControls').hidden = sampleMode;
     state.imageVersion += 1;
     cancelPrediction();
+    resetReference();
+    $('sourceContext').textContent = sampleMode
+      ? 'Ảnh có sẵn hiển thị kèm ảnh mẫu chuẩn để đối chiếu. Mô hình dự đoán từ ảnh kiểm tra.'
+      : 'Chỉ cần một ảnh PCB. Không yêu cầu ảnh mẫu chuẩn.';
     if (sampleMode) loadSample();
     else if ($('imageFile').files[0]) loadFile($('imageFile').files[0]);
     else {
