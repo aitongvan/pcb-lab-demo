@@ -128,7 +128,7 @@ async function showReference(sample, version) {
     $('imageGrid').classList.add('has-reference');
   } catch {
     if (version === state.imageVersion) {
-      $('sourceContext').textContent = 'Chưa tải được ảnh mẫu chuẩn. Kết quả dự đoán vẫn sử dụng ảnh kiểm tra.';
+      $('sourceContext').textContent = 'Chưa tải được PCB chuẩn. Kết quả dự đoán vẫn sử dụng ảnh kiểm tra.';
     }
   }
 }
@@ -139,8 +139,8 @@ async function loadFile(file, sample = null) {
   resetReference();
   $('inputTitle').textContent = sample ? 'Ảnh kiểm tra' : 'Ảnh tải lên';
   $('sourceContext').textContent = sample
-    ? `Cặp ${sample.id} · ${splits[sample.split]}. Ảnh mẫu chuẩn chỉ để đối chiếu; mô hình dự đoán từ ảnh kiểm tra.`
-    : 'Chỉ cần một ảnh PCB. Mô hình phân tích trực tiếp ảnh tải lên, không yêu cầu ảnh mẫu chuẩn.';
+    ? `Cặp ${sample.id} · ${splits[sample.split]}. PCB chuẩn chỉ để đối chiếu; mô hình dự đoán từ ảnh kiểm tra.`
+    : 'Chỉ cần một ảnh PCB. Mô hình phân tích trực tiếp ảnh tải lên, không yêu cầu PCB chuẩn.';
   state.file = null;
   state.result = null;
   $('regionControls').hidden = true;
@@ -457,8 +457,8 @@ document.querySelectorAll('input[name=source]').forEach((radio) => {
     cancelPrediction();
     resetReference();
     $('sourceContext').textContent = sampleMode
-      ? 'Ảnh có sẵn hiển thị kèm ảnh mẫu chuẩn để đối chiếu. Mô hình dự đoán từ ảnh kiểm tra.'
-      : 'Chỉ cần một ảnh PCB. Không yêu cầu ảnh mẫu chuẩn.';
+      ? 'Ảnh có sẵn hiển thị kèm PCB chuẩn để đối chiếu. Mô hình dự đoán từ ảnh kiểm tra.'
+      : 'Chỉ cần một ảnh PCB. Không yêu cầu PCB chuẩn.';
     if (sampleMode) loadSample();
     else if ($('imageFile').files[0]) loadFile($('imageFile').files[0]);
     else {

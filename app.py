@@ -144,9 +144,9 @@ with detect_tab:
         if reference is not None:
             reference_column,left,right=st.columns(3,gap='medium')
             reference_panel=reference_column.container(key='pcb_reference')
-            reference_panel.markdown('**Ảnh mẫu chuẩn**')
+            reference_panel.markdown('**PCB chuẩn**')
             reference_panel.image(reference,caption=f'Cặp {sample_id} · Ảnh tham chiếu',width='stretch')
-            st.caption('Ảnh mẫu chuẩn dùng để đối chiếu; mô hình vẫn dự đoán từ ảnh kiểm tra.')
+            st.caption('PCB chuẩn dùng để đối chiếu; mô hình vẫn dự đoán từ ảnh kiểm tra.')
         else:
             left,right=st.columns(2,gap='medium')
         input_panel=left.container(key='pcb_input')
